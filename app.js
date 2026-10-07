@@ -2062,19 +2062,24 @@ class MusicUniverseApp {
     document.getElementById('star-card').classList.remove('active');
   }
 
-  resetCamera(silent = false) {
-    this.closeStarCard();
-    this.cameraTargetPos = new THREE.Vector3(230, 125, 430);
-    this.controlsTargetPos = new THREE.Vector3(0, 0, 0);
-    this.isCameraAnimating = true;
-    document.querySelectorAll('.galaxy-nav-item').forEach(button => button.classList.remove('active'));
+resetCamera(silent = false) {
+  this.closeStarCard();
+  this.cameraTargetPos = new THREE.Vector3(230, 125, 430);
+  this.controlsTargetPos = new THREE.Vector3(0, 0, 0);
+  this.isCameraAnimating = true;
 
-    if (!silent) {
-      const dict = I18N[this.currentLang];
-      this.showToast(dict.toastReset);
-    }
-    exitStarDetail() {
-  // 必须在 closeStarCard 清空 selectedStar 前取得 genre
+  document.querySelectorAll('.galaxy-nav-item').forEach(button => {
+    button.classList.remove('active');
+  });
+
+  if (!silent) {
+    const dict = I18N[this.currentLang];
+    this.showToast(dict.toastReset);
+  }
+} // resetCamera 必须先在这里结束
+
+exitStarDetail() {
+  // 关闭卡片前先记住歌曲所属星系
   const genre = this.selectedStar?.userData?.track?.genre;
 
   this.closeStarCard();
@@ -2085,7 +2090,6 @@ class MusicUniverseApp {
     this.resetCamera(true);
   }
 }
-  }
 
   openUploadModal() {
     if (this.currentCommunityId) {
