@@ -1038,6 +1038,8 @@ class MusicUniverseApp {
     for (const genreName in nebulae) {
       const cluster = nebulae[genreName];
       const { palette, center } = cluster;
+      // Give busy galaxies more breathing room while keeping small ones compact.
+      const galaxyRadius = Math.max(72, Math.min(132, (cluster.radius || 72) + 18));
 
       const particleCount = 2100;
       const geometry = new THREE.BufferGeometry();
@@ -1049,20 +1051,20 @@ class MusicUniverseApp {
 
       for (let i = 0; i < particleCount; i++) {
         const armCount = 4;
-        const radius = 4 + Math.pow(Math.random(), 0.7) * 66;
+        const radius = 4 + Math.pow(Math.random(), 0.7) * galaxyRadius;
         const arm = i % armCount;
         const armAngle = (arm / armCount) * Math.PI * 2;
         const twist = radius * 0.095;
         const scatter = (Math.random() - 0.5) * (0.32 + radius * 0.018);
         const theta = armAngle + twist + scatter;
         const verticalNoise = Math.random() + Math.random() + Math.random() - 1.5;
-        const verticalSpread = verticalNoise * (9 + radius * 0.28);
+        const verticalSpread = verticalNoise * (9 + radius * 0.24);
 
         positions[i * 3] = Math.cos(theta) * radius;
         positions[i * 3 + 1] = verticalSpread;
         positions[i * 3 + 2] = Math.sin(theta) * radius;
 
-        const mixRatio = Math.min(1, radius / 70 + Math.random() * 0.22);
+        const mixRatio = Math.min(1, radius / galaxyRadius + Math.random() * 0.22);
         const c = baseColor.clone().lerp(secColor, mixRatio);
         colors[i * 3] = c.r;
         colors[i * 3 + 1] = c.g;
@@ -1103,7 +1105,7 @@ class MusicUniverseApp {
         depthWrite: false,
         side: THREE.DoubleSide
       });
-      const nebulaDisc = new THREE.Mesh(new THREE.CircleGeometry(72, 96), discMaterial);
+      const nebulaDisc = new THREE.Mesh(new THREE.CircleGeometry(galaxyRadius, 96), discMaterial);
       nebulaDisc.rotation.x = -Math.PI / 2;
       nebulaDisc.scale.y = 0.82;
       galaxyGroup.add(nebulaDisc);
@@ -1114,7 +1116,7 @@ class MusicUniverseApp {
       const haloPositions = new Float32Array(haloCount * 3);
       const haloColors = new Float32Array(haloCount * 3);
       for (let i = 0; i < haloCount; i++) {
-        const radius = 22 + Math.pow(Math.random(), 0.55) * 62;
+        const radius = 22 + Math.pow(Math.random(), 0.55) * galaxyRadius * 0.94;
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(2 * Math.random() - 1);
         haloPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
@@ -1150,7 +1152,7 @@ class MusicUniverseApp {
         depthWrite: false
       });
       const coreGlow = new THREE.Sprite(coreMaterial);
-      coreGlow.scale.set(36, 36, 1);
+      coreGlow.scale.set(Math.min(46, galaxyRadius * 0.42), Math.min(46, galaxyRadius * 0.42), 1);
       galaxyGroup.add(coreGlow);
       this.nebulaGroup.add(galaxyGroup);
 

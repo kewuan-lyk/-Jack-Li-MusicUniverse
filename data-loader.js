@@ -135,7 +135,9 @@ class DataLoader {
         songName: getValue(values, ['Track Name', 'Name', 'Title']),
         artist: getValue(values, ['Artist Name(s)', 'Artist Name', 'Artist']),
         album: getValue(values, ['Album Name', 'Album']) || 'Single',
-        genre: getValue(values, ['Artist Genres', 'Genres', 'Album Genres']) || 'Pop',
+        // Exportify usually does not include artist genres. Leave it empty so
+        // cleanTrackItem can infer a useful galaxy from the artist/title.
+        genre: getValue(values, ['Artist Genres', 'Genres', 'Album Genres']),
         releaseYear: parseInt(releaseDate.slice(0, 4), 10) || 2020,
         duration_ms: parseInt(getValue(values, ['Track Duration (ms)', 'Duration (ms)', 'Duration_ms']), 10) || 0,
         popularity: parseInt(getValue(values, ['Popularity']), 10) || 0,
@@ -157,10 +159,7 @@ class DataLoader {
     const songName = String(item.songName || item.name || item.title || `Track #${idx + 1}`).trim();
     const artist = String(item.artist || (item.artists ? item.artists.map(a => a.name).join(', ') : 'Unknown Artist')).trim();
 
-    let rawGenre = String(item.genre || (item.genres ? item.genres[0] : '') || 'Pop').trim().toLowerCase();
-    if (rawGenre.includes('r&b') || rawGenre.includes('rnb') || songName.toLowerCase().includes('starboy')) {
-      rawGenre = 'r&b';
-    }
+    const rawGenre = this.inferGenre(item, songName, artist);
 
     let matchKey = 'default';
     for (const key in this.genreMap) {
@@ -229,6 +228,25 @@ class DataLoader {
     };
   }
 
+  inferGenre(item, songName, artist) {
+    const artistGenres = Array.isArray(item.artists)
+      ? item.artists.flatMap(entry => Array.isArray(entry.genres) ? entry.genres : [])
+      : [];
+    const explicit = item.genre || item.artistGenres || item.artist_genres ||
+      (Array.isArray(item.genres) ? item.genres.join(' ') : item.genres) || artistGenres.join(' ');
+    const source = `${explicit} ${artist} ${songName} ${item.album?.name || item.album || ''}`.toLowerCase();
+    const rules = [
+      { genre: 'classical', words: ['classical', 'orchestra', 'orchestral', 'baroque', 'opera', 'symphony', 'piano concerto', 'mozart', 'beethoven'] },
+      { genre: 'jazz', words: ['jazz', 'bebop', 'swing', 'blues', 'soul jazz', 'bossa', 'ellington', 'coltrane', 'miles davis', 'nina simone', 'ella fitzgerald', 'frank sinatra'] },
+      { genre: 'rock', words: ['rock', 'alternative', 'indie rock', 'punk', 'metal', 'grunge', 'hard rock', 'post-rock', 'emo', 'shoegaze', 'nirvana', 'foo fighters', 'radiohead', 'queen', 'beatles', 'arctic monkeys', 'black sabbath', 'led zeppelin', 'eagles', 'guns n roses', 'metallica', 'linkin park', 'oasis'] },
+      { genre: 'electronic', words: ['electronic', 'edm', 'house', 'techno', 'trance', 'dubstep', 'drum and bass', 'dance', 'electro', 'ambient', 'downtempo', 'daft punk', 'deadmau5', 'avicii', 'kavinsky'] },
+      { genre: 'r&b', words: ['r&b', 'rnb', 'neo soul', 'neo-soul', 'funk', 'motown', 'soul', 'hip hop', 'hip-hop', 'hiphop', 'rap', 'trap', 'afrobeats', 'the weeknd', 'sza', 'usher', 'beyonce', 'childish gambino'] },
+      { genre: 'pop', words: ['pop', 'k-pop', 'j-pop', 'indie pop', 'dream pop', 'taylor swift', 'lady gaga', 'michael jackson', 'madonna', 'billie eilish'] }
+    ];
+    const match = rules.find(rule => rule.words.some(word => source.includes(word)));
+    return (match ? match.genre : 'pop').trim().toLowerCase();
+  }
+
   processData(rawData) {
     let list = [];
     if (Array.isArray(rawData)) {
@@ -268,6 +286,11 @@ class DataLoader {
     }
 
     const nebulaeClusters = {};
+    const genreBuckets = {};
+    cleaned.forEach(track => {
+      if (!genreBuckets[track.genre]) genreBuckets[track.genre] = [];
+      genreBuckets[track.genre].push(track);
+    });
     let totalPlays = 0;
     let totalEnergy = 0;
     const genreStats = {};
@@ -297,14 +320,23 @@ class DataLoader {
         ? 0.5
         : (track.releaseYear - genreYears.min) / genreYearSpan;
       const galaxyCenter = track.genreConfig.center || { x: 0, y: 0, z: 0 };
-      const posX = galaxyCenter.x + (yearNorm - 0.5) * 76;
-      const posY = galaxyCenter.y + (0.5 * energyScore + 0.5 * playScore - 0.65) * 54;
-      const posZ = galaxyCenter.z;
+      const bucket = genreBuckets[track.genre];
+      const localIndex = bucket.indexOf(track);
+      const crowdScale = Math.min(3.8, 0.85 + Math.sqrt(bucket.length / 4));
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const angle = localIndex * goldenAngle + yearNorm * Math.PI * 1.7;
+      const radialNorm = Math.sqrt((localIndex + 0.7) / Math.max(1, bucket.length));
+      const spread = Math.min(128, 30 + crowdScale * 16 + Math.sqrt(bucket.length) * 3.4);
+      const radius = 8 + radialNorm * spread;
+      const yearOffset = (yearNorm - 0.5) * Math.min(42, 18 + crowdScale * 7);
+      const posX = galaxyCenter.x + Math.cos(angle) * radius + yearOffset;
+      const posY = galaxyCenter.y + (0.5 * energyScore + 0.5 * playScore - 0.65) * (28 + crowdScale * 7);
+      const posZ = galaxyCenter.z + Math.sin(angle) * radius;
 
       const hash = this.stringHash(track.id + track.songName);
-      const microX = ((hash % 100) / 100 - 0.5) * 8;
-      const microY = (((hash >> 2) % 100) / 100 - 0.5) * 8;
-      const microZ = (((hash >> 4) % 100) / 100 - 0.5) * 14;
+      const microX = ((hash % 100) / 100 - 0.5) * 5;
+      const microY = (((hash >> 2) % 100) / 100 - 0.5) * 5;
+      const microZ = (((hash >> 4) % 100) / 100 - 0.5) * 7;
 
       const position = {
         x: posX + microX,
@@ -323,11 +355,14 @@ class DataLoader {
           palette: track.genreConfig,
           spatialAnchor: { ...track.genreConfig.center },
           positions: [],
-          count: 0
+          count: 0,
+          radius: 0
         };
       }
       nebulaeClusters[gName].positions.push(position);
       nebulaeClusters[gName].count++;
+      nebulaeClusters[gName].radius = Math.max(nebulaeClusters[gName].radius,
+        Math.hypot(position.x - galaxyCenter.x, position.y - galaxyCenter.y, position.z - galaxyCenter.z));
 
       return {
         ...track,
@@ -343,17 +378,9 @@ class DataLoader {
 
     for (const gName in nebulaeClusters) {
       const cluster = nebulaeClusters[gName];
-      let sumX = 0, sumY = 0, sumZ = 0;
-      cluster.positions.forEach(p => {
-        sumX += p.x;
-        sumY += p.y;
-        sumZ += p.z;
-      });
-      cluster.center = {
-        x: sumX / cluster.positions.length,
-        y: sumY / cluster.positions.length,
-        z: sumZ / cluster.positions.length
-      };
+      // Keep the authored galaxy anchor stable. Averaging a large playlist's
+      // positions would pull the whole nebula away from its navigation point.
+      cluster.center = { ...cluster.spatialAnchor };
     }
     this.nebulae = nebulaeClusters;
 
