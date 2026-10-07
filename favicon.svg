@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Music Universe note">
+  <defs>
+    <linearGradient id="space" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111833"/>
+      <stop offset="1" stop-color="#050711"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="20" y1="50" x2="48" y2="12" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff4fd8"/>
+      <stop offset="0.52" stop-color="#9a6cff"/>
+      <stop offset="1" stop-color="#50f6ff"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#space)" stroke="#3b486f" stroke-width="2"/>
+  <circle cx="48" cy="17" r="1.5" fill="#ffffff" opacity="0.8"/>
+  <circle cx="15" cy="19" r="1" fill="#50f6ff" opacity="0.7"/>
+  <g fill="url(#neon)" filter="url(#glow)">
+    <ellipse cx="22" cy="45" rx="9" ry="7" transform="rotate(-18 22 45)"/>
+    <ellipse cx="43" cy="38" rx="9" ry="7" transform="rotate(-18 43 38)"/>
+    <rect x="28" y="17" width="6" height="28" rx="2"/>
+    <rect x="47" y="13" width="6" height="25" rx="2"/>
+    <path d="M31 17 50 12v8l-19 5Z"/>
+  </g>
+</svg>
