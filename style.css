@@ -43,6 +43,10 @@ body, html {
   z-index: 1;
 }
 
+#canvas-container canvas {
+  touch-action: none;
+}
+
 /* 3D HTML Floating Labels Layer */
 #labels-container {
   position: absolute;
@@ -1872,5 +1876,127 @@ textarea.cyber-textarea:focus {
   }
   .star-card.active {
     transform: translateX(50%) translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .hud-overlay {
+    padding: 10px;
+  }
+
+  header.cyber-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 9px;
+    border-radius: 16px;
+  }
+
+  .logo-group {
+    min-width: 0;
+    gap: 7px;
+  }
+
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  h1.cyber-title {
+    overflow: hidden;
+    font-size: 0.82rem;
+    letter-spacing: 0.8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-controls {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .header-controls > .header-action {
+    width: 34px;
+    min-height: 34px;
+    padding: 5px;
+    justify-content: center;
+  }
+
+  .header-controls > .header-action > span:not(.header-action-icon) {
+    display: none;
+  }
+
+  .header-action-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .lang-switcher {
+    padding: 2px;
+  }
+
+  .lang-btn {
+    min-width: 25px;
+    padding: 4px 5px;
+    font-size: 0.64rem;
+  }
+
+  .track-search {
+    top: 68px;
+    width: calc(100vw - 20px);
+  }
+
+  .track-search-box {
+    min-height: 40px;
+  }
+
+  .galaxy-nav {
+    top: 118px;
+    width: min(205px, calc(100vw - 42px));
+  }
+
+  .hud-footer {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    display: block;
+    padding: 7px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+  }
+
+  .stats-group {
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .stat-item {
+    gap: 4px;
+  }
+
+  .stat-label {
+    font-size: 0.58rem;
+  }
+
+  .hint-text {
+    display: none;
+  }
+
+  .star-card {
+    bottom: 62px;
+    max-height: calc(100vh - 132px);
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .card-title-group h2 {
+    font-size: 1.2rem;
+  }
+
+  .planet-label {
+    max-width: 130px;
+    font-size: 0.62rem;
   }
 }

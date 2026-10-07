@@ -503,7 +503,10 @@ class MusicUniverseApp {
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Keep the glow crisp on desktop without making phones render four times
+    // as many pixels as they can comfortably display.
+    const pixelRatio = window.innerWidth <= 600 ? 1.5 : 2;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatio));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.02;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
@@ -571,7 +574,7 @@ class MusicUniverseApp {
   }
 
   initDeepSpaceBackdrop() {
-    const starCount = 3200;
+    const starCount = window.innerWidth <= 600 ? 1600 : 3200;
     const positions = new Float32Array(starCount * 3);
     const colors = new Float32Array(starCount * 3);
     const cool = new THREE.Color('#6488b8');
@@ -1045,7 +1048,7 @@ class MusicUniverseApp {
       // Give busy galaxies more breathing room while keeping small ones compact.
       const galaxyRadius = Math.max(72, Math.min(132, (cluster.radius || 72) + 18));
 
-      const particleCount = 2100;
+      const particleCount = window.innerWidth <= 600 ? 1200 : 2100;
       const geometry = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
       const colors = new Float32Array(particleCount * 3);
@@ -1115,7 +1118,7 @@ class MusicUniverseApp {
       galaxyGroup.add(nebulaDisc);
       galaxyGroup.add(spiralCloud);
 
-      const haloCount = 920;
+      const haloCount = window.innerWidth <= 600 ? 460 : 920;
       const haloGeometry = new THREE.BufferGeometry();
       const haloPositions = new Float32Array(haloCount * 3);
       const haloColors = new Float32Array(haloCount * 3);
