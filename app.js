@@ -19,6 +19,7 @@ const I18N = {
     statTracks: "Total Stars:",
     statPlays: "Total Plays:",
     statGenre: "Dominant Genre:",
+    searchPlaceholder: "Search songs, artists or albums…",
     hintInteraction: "🖱 Left-drag: move · Right-drag: rotate · Scroll: zoom · Click a star: details",
     labelTelemetry: "Listening Memory & Story:",
     labelPlayCount: "Play Count",
@@ -123,6 +124,7 @@ const I18N = {
     statTracks: "Estrellas Totales:",
     statPlays: "Reproducciones:",
     statGenre: "Género Principal:",
+    searchPlaceholder: "Buscar canciones, artistas o álbumes…",
     hintInteraction: "🖱 Arrastrar izq.: mover · Arrastrar der.: rotar · Rueda: zoom",
     labelTelemetry: "Memoria e Historia de Reproducción:",
     labelPlayCount: "Reproducciones",
@@ -227,6 +229,7 @@ const I18N = {
     statTracks: "星体总数:",
     statPlays: "累计播放:",
     statGenre: "主导曲风:",
+    searchPlaceholder: "搜索歌曲、歌手或专辑…",
     hintInteraction: "🖱 左键拖动：移动 · 右键拖动：旋转 · 滚轮：缩放 · 点击星体：详情",
     labelTelemetry: "听歌记忆与故事:",
     labelPlayCount: "播放次数",
@@ -339,6 +342,7 @@ class MusicUniverseApp {
     this.starMeshes = [];
     this.labelElements = [];
     this.nebulaMarkers = [];
+    this.currentTracks = [];
 
     this.selectedPulseMesh = null;
     this.selectedStar = null;
@@ -1171,6 +1175,8 @@ class MusicUniverseApp {
 
   buildGalaxy(tracks, stats, nebulae) {
     this.clearStarGroup();
+    this.currentTracks = tracks || [];
+    this.clearTrackSearch();
 
     const labelsContainer = document.getElementById('labels-container');
     labelsContainer.innerHTML = '';
@@ -1521,6 +1527,14 @@ class MusicUniverseApp {
       document.getElementById('audio-btn-text').textContent = this.audioEnabled ? dict.btnAudioOn : dict.btnAudioOff;
       this.showToast(this.audioEnabled ? "Audio SFX Enabled" : "Audio SFX Muted");
     });
+
+    const searchInput = document.getElementById('track-search-input');
+    searchInput.addEventListener('input', event => this.updateTrackSearch(event.target.value));
+    searchInput.addEventListener('keydown', event => {
+      if (event.key === 'Escape') this.clearTrackSearch();
+      if (event.key === 'Enter') this.selectFirstSearchResult();
+    });
+    document.getElementById('btn-clear-track-search').addEventListener('click', () => this.clearTrackSearch());
 
     document.querySelectorAll('.lang-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1892,13 +1906,82 @@ class MusicUniverseApp {
     }
   }
 
+  updateTrackSearch(query = '') {
+    const search = document.getElementById('track-search');
+    const input = document.getElementById('track-search-input');
+    const results = document.getElementById('track-search-results');
+    if (!search || !input || !results) return;
+
+    const normalized = String(query).trim().toLowerCase();
+    search.classList.toggle('has-query', Boolean(normalized));
+    results.innerHTML = '';
+    if (!normalized) {
+      results.classList.remove('active');
+      return;
+    }
+
+    const matches = this.starMeshes
+      .map(mesh => mesh.userData.track)
+      .filter(track => [track.songName, track.artist, track.album, track.genre]
+        .some(value => String(value || '').toLowerCase().includes(normalized)))
+      .slice(0, 10);
+
+    if (matches.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'track-search-empty';
+      empty.textContent = 'No matching songs in this universe.';
+      results.appendChild(empty);
+      results.classList.add('active');
+      return;
+    }
+
+    matches.forEach(track => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'track-search-result';
+      button.setAttribute('role', 'option');
+      button.innerHTML = `
+        <span class="track-search-result-dot" style="color:${track.palette.primary};background:${track.palette.primary}"></span>
+        <span class="track-search-result-copy">
+          <span class="track-search-result-title"></span>
+          <span class="track-search-result-meta"></span>
+        </span>`;
+      button.querySelector('.track-search-result-title').textContent = track.songName;
+      button.querySelector('.track-search-result-meta').textContent = `${track.artist} · ${track.genre}`;
+      button.addEventListener('click', event => {
+        event.stopPropagation();
+        const mesh = this.starMeshes.find(candidate => candidate.userData.track === track);
+        if (mesh) this.selectStar(mesh);
+        this.clearTrackSearch();
+      });
+      results.appendChild(button);
+    });
+    results.classList.add('active');
+  }
+
+  selectFirstSearchResult() {
+    const first = document.querySelector('.track-search-result');
+    if (first) first.click();
+  }
+
+  clearTrackSearch() {
+    const search = document.getElementById('track-search');
+    const input = document.getElementById('track-search-input');
+    const results = document.getElementById('track-search-results');
+    if (!search || !input || !results) return;
+    input.value = '';
+    search.classList.remove('has-query');
+    results.classList.remove('active');
+    results.innerHTML = '';
+  }
+
   onClick(event) {
     if (this.wasPointerDragging) {
       this.wasPointerDragging = false;
       return;
     }
 
-    if (event.target.closest('.cyber-header') || event.target.closest('.galaxy-nav') || event.target.closest('.star-card') || event.target.closest('.modal-container') || event.target.closest('.planet-label')) {
+    if (event.target.closest('.cyber-header') || event.target.closest('.track-search') || event.target.closest('.galaxy-nav') || event.target.closest('.star-card') || event.target.closest('.modal-container') || event.target.closest('.planet-label')) {
       return;
     }
 

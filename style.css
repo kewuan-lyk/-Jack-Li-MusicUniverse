@@ -359,6 +359,109 @@ h1.cyber-title {
   gap: 8px;
 }
 
+/* Search stays above the canvas so large playlists remain easy to navigate. */
+.track-search {
+  position: fixed;
+  top: 86px;
+  left: 50%;
+  width: min(430px, calc(100vw - 40px));
+  transform: translateX(-50%);
+  z-index: 18;
+  pointer-events: auto;
+}
+
+.track-search-box {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 10px 0 13px;
+  border: 1px solid rgba(0, 243, 255, 0.34);
+  border-radius: 999px;
+  background: rgba(8, 12, 28, 0.88);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.track-search-box:focus-within {
+  border-color: rgba(0, 243, 255, 0.8);
+  box-shadow: 0 0 24px rgba(0, 243, 255, 0.16), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.track-search-icon {
+  color: var(--cyan-glow);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+#track-search-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-main);
+  font: 500 0.92rem var(--font-cyber);
+  letter-spacing: 0.25px;
+  user-select: text;
+}
+
+#track-search-input::placeholder { color: rgba(176, 198, 235, 0.64); }
+
+.track-search-clear {
+  display: none;
+  width: 25px;
+  height: 25px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  color: rgba(232, 239, 255, 0.82);
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.track-search.has-query .track-search-clear { display: grid; place-items: center; }
+
+.track-search-results {
+  display: none;
+  max-height: min(390px, 52vh);
+  margin-top: 8px;
+  overflow-y: auto;
+  border: 1px solid rgba(139, 124, 255, 0.3);
+  border-radius: 14px;
+  background: rgba(7, 10, 25, 0.94);
+  box-shadow: 0 16px 38px rgba(0,0,0,0.38);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.track-search-results.active { display: block; }
+
+.track-search-result {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 13px;
+  border: 0;
+  border-bottom: 1px solid rgba(139, 124, 255, 0.12);
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+}
+
+.track-search-result:last-child { border-bottom: 0; }
+.track-search-result:hover, .track-search-result:focus-visible { background: rgba(0, 243, 255, 0.1); outline: 0; }
+.track-search-result-dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
+.track-search-result-copy { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.track-search-result-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.track-search-result-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 0.76rem; }
+.track-search-empty { padding: 14px; color: var(--text-muted); font-size: 0.82rem; text-align: center; }
+
 .header-controls > .header-action {
   min-height: 38px;
   padding: 7px 13px;
@@ -1681,6 +1784,10 @@ textarea.cyber-textarea:focus {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .track-search {
+    top: 148px;
+  }
+
   .galaxy-nav {
     top: 92px;
     left: 10px;
