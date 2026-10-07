@@ -1301,23 +1301,36 @@ class MusicUniverseApp {
     });
   }
 
-  focusGalaxy(genreName) {
-    const cluster = this.currentNebulae && this.currentNebulae[genreName];
-    if (!cluster) return;
+ focusGalaxy(genreName) {
+  const cluster = this.currentNebulae?.[genreName];
+  if (!cluster) return;
 
-    this.closeStarCard();
-    const center = new THREE.Vector3(cluster.center.x, cluster.center.y, cluster.center.z);
-    this.controlsTargetPos = center.clone();
-    this.cameraTargetPos = center.clone().add(new THREE.Vector3(85, 75, 115));
-    this.isCameraAnimating = true;
+  this.closeStarCard();
 
-    document.querySelectorAll('.galaxy-nav-item').forEach(button => {
-      button.classList.toggle('active', button.dataset.genre === genreName);
-    });
+  const center = new THREE.Vector3(
+    cluster.center.x,
+    cluster.center.y,
+    cluster.center.z
+  );
 
-    const message = I18N[this.currentLang].navFocused.replace('{genre}', genreName);
-    this.showToast(message);
-  }
+  this.controlsTargetPos = center.clone();
+  this.cameraTargetPos = center.clone().add(
+    new THREE.Vector3(85, 75, 115)
+  );
+  this.isCameraAnimating = true;
+
+  document.querySelectorAll('.galaxy-nav-item').forEach(button => {
+    button.classList.toggle(
+      'active',
+      button.dataset.genre === genreName
+    );
+  });
+
+  const message = I18N[this.currentLang].navFocused
+    .replace('{genre}', genreName);
+
+  this.showToast(message);
+}
 
   clearStarGroup() {
     while (this.starGroup.children.length > 0) {
@@ -1454,7 +1467,7 @@ class MusicUniverseApp {
       event.preventDefault();
       this.sendCommunityMessage();
     });
-    document.getElementById('btn-close-card').addEventListener('click', () => this.closeStarCard());
+    document.getElementById('btn-close-card').addEventListener('click', () => this.exitStarDetail());
     document.getElementById('btn-open-modal').addEventListener('click', () => this.openUploadModal());
     document.getElementById('btn-close-modal').addEventListener('click', () => this.closeUploadModal());
     document.getElementById('btn-cancel-modal').addEventListener('click', () => this.closeUploadModal());
@@ -2060,6 +2073,18 @@ class MusicUniverseApp {
       const dict = I18N[this.currentLang];
       this.showToast(dict.toastReset);
     }
+    exitStarDetail() {
+  // 必须在 closeStarCard 清空 selectedStar 前取得 genre
+  const genre = this.selectedStar?.userData?.track?.genre;
+
+  this.closeStarCard();
+
+  if (genre) {
+    this.focusGalaxy(genre);
+  } else {
+    this.resetCamera(true);
+  }
+}
   }
 
   openUploadModal() {
