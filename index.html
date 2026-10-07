@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyberpunk Music Universe | 3D Interactive Galaxy</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=8">
+
+  <!-- Three.js & OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <!-- 3D Canvas Background -->
+  <div id="canvas-container"></div>
+
+  <!-- 3D Floating Labels Layer -->
+  <div id="labels-container"></div>
+
+  <!-- Collapsible Galaxy Navigation -->
+  <aside id="galaxy-nav" class="galaxy-nav" aria-label="Galaxy directory">
+    <button id="btn-toggle-galaxy-nav" class="galaxy-nav-toggle" type="button" aria-expanded="true" aria-label="Hide galaxy directory">
+      <span class="toggle-icon">◀</span>
+    </button>
+    <div class="galaxy-nav-content">
+      <div class="galaxy-nav-heading">
+        <span class="nav-orbit-icon"></span>
+        <span data-i18n="navTitle">Galaxy Directory</span>
+      </div>
+      <div id="galaxy-nav-list" class="galaxy-nav-list"></div>
+      <div class="galaxy-nav-hint" data-i18n="navMoveHint">Left-drag to move · Right-drag to rotate</div>
+    </div>
+  </aside>
+
+  <!-- HUD Interface Overlay -->
+  <div class="hud-overlay">
+    
+    <!-- Top Header Navigation Bar -->
+    <header class="cyber-header">
+      <div class="logo-group">
+        <div class="logo-icon"></div>
+        <h1 class="cyber-title" data-i18n="appTitle">Cyberpunk Music Universe</h1>
+      </div>
+
+      <div class="header-controls">
+        <button id="btn-guide" class="cyber-btn header-action">
+          <span class="header-action-icon">?</span>
+          <span data-i18n="btnGuide">User Guide</span>
+        </button>
+
+        <button id="btn-universe-archive" class="cyber-btn header-action btn-universe">
+          <span class="header-action-icon header-action-icon--orbit"></span>
+          <span data-i18n="btnUniverses">Universes</span>
+        </button>
+
+        <button id="btn-community" class="cyber-btn header-action btn-community">
+          <span class="header-action-icon header-action-icon--community">•••</span>
+          <span data-i18n="btnCommunity">Community</span>
+        </button>
+
+        <button id="btn-open-modal" class="cyber-btn btn-pink header-action header-action--primary">
+          <span class="header-action-icon">＋</span>
+          <span data-i18n="btnUpload">Import Playlist</span>
+        </button>
+
+        <button id="btn-reset-view" class="cyber-btn header-action header-action--icon-only" data-i18n-title="btnReset">
+          <span class="header-action-icon">↺</span>
+          <span data-i18n="btnReset">Reset View</span>
+        </button>
+
+        <button id="btn-toggle-audio" class="cyber-btn header-action header-action--icon-only">
+          <span class="header-action-icon">◌</span>
+          <span id="audio-btn-text" data-i18n="btnAudioOn">SFX Sound: ON</span>
+        </button>
+
+        <!-- Language Switcher Bar -->
+        <div class="lang-switcher">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="es">ES</button>
+          <button class="lang-btn" data-lang="zh">中文</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Bottom Footer Stats Bar -->
+    <footer class="hud-footer">
+      <div class="stats-group">
+        <div class="stat-item">
+          <span class="stat-label" data-i18n="statTracks">Total Stars:</span>
+          <span id="stat-count" class="stat-val">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label" data-i18n="statPlays">Total Plays:</span>
+          <span id="stat-plays" class="stat-val">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label" data-i18n="statGenre">Dominant Genre:</span>
+          <span id="stat-genre" class="stat-val">--</span>
+        </div>
+      </div>
+      <div class="hint-text" data-i18n="hintInteraction">
+        ✨ Click any glowing pixel star to zoom in, play 30s preview & open Spotify.
+      </div>
+    </footer>
+  </div>
+
+  <!-- Star Telemetry Data Analysis Card (Right Panel) -->
+  <div id="star-card" class="star-card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h2 id="card-song-title">Starboy</h2>
+        <h3 id="card-artist-name">The Weeknd</h3>
+      </div>
+      <button id="btn-close-card" class="close-btn">&times;</button>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+      <span id="card-genre-badge" class="genre-badge">R&B</span>
+      <span id="card-mood-badge" class="genre-badge" style="background: rgba(0, 243, 255, 0.15); border-color: var(--cyan-glow); color: var(--cyan-glow);">ENERGETIC</span>
+    </div>
+
+    <div class="tagline-box">
+      <span data-i18n="labelTelemetry">Listening Memory & Story:</span>
+      <p id="card-tagline">Your late-night spiritual pillar stream.</p>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="label" data-i18n="labelPlayCount">Play Count</div>
+        <div id="card-play-count" class="val">342</div>
+        <div class="bar-container">
+          <div id="bar-play-count" class="bar-fill" style="width: 80%;"></div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="label" data-i18n="labelEnergy">Energy Level</div>
+        <div id="card-energy" class="val">88%</div>
+        <div class="bar-container">
+          <div id="bar-energy" class="bar-fill" style="width: 88%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="label" data-i18n="labelReleaseYear">Release Era</div>
+        <div id="card-release-year" class="val">2016</div>
+      </div>
+      <div class="metric-card">
+        <div class="label" data-i18n="labelAlbum">Album</div>
+        <div id="card-album" class="val" style="font-size: 0.95rem;">Starboy</div>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="label" data-i18n="labelDuration">Track Duration</div>
+        <div id="card-duration" class="val" style="font-size: 0.95rem;">3:50</div>
+      </div>
+      <div class="metric-card">
+        <div class="label" data-i18n="labelLastPlayed">Last Played</div>
+        <div id="card-last-played" class="val" style="font-size: 0.85rem;">2026-09-28</div>
+      </div>
+    </div>
+
+    <!-- Spotify Embedded Player (30s preview) -->
+    <div id="spotify-embed-container" style="margin-top: 12px; display: none; border-radius: 12px; overflow: hidden;">
+      <div id="spotify-embed"></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="card-actions" style="flex-direction: column; gap: 10px; margin-top: 10px;">
+      <button id="btn-preview-audio" class="cyber-btn btn-pink" style="width: 100%; justify-content: center;">
+        <span id="preview-btn-text" data-i18n="btnPlayPreview">▶️ Play 30s Preview</span>
+      </button>
+
+      <a id="btn-spotify-link" class="cyber-btn btn-primary" target="_blank" href="#" style="text-decoration: none; width: 100%; justify-content: center;">
+        <span data-i18n="btnSpotify">🎧 Open on Spotify</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- User Guide Modal -->
+  <div id="guide-modal" class="modal-backdrop">
+    <div class="modal-container guide-modal-container">
+      <div class="modal-header">
+        <h2 data-i18n="guideTitle">📖 User Guide & Instructions</h2>
+        <button id="btn-close-guide" class="close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div class="guide-section">
+          <h3 style="color: var(--cyan-glow); margin-bottom: 6px;">🌌 1. 3D Galaxy Nebulae Structure</h3>
+          <p class="modal-desc" data-i18n="guideStep1">
+            Your listening history is transformed into 6 distinct 3D Galaxy Nebulae: R&B, Jazz, Classical, Pop, Synthwave, and Rock. Each glowing pixel star represents a song you listened to.
+          </p>
+        </div>
+
+        <div class="guide-section" style="margin-top: 14px;">
+          <h3 style="color: var(--pink-glow); margin-bottom: 6px;">🖱️ 2. Controls & Exploration</h3>
+          <p class="modal-desc" data-i18n="guideStep2">
+            Left-drag to move through space. Right-drag to rotate the view. Scroll to zoom. Click a star to focus and open its details.
+          </p>
+        </div>
+
+        <div class="guide-section" style="margin-top: 14px;">
+          <h3 style="color: var(--gold-glow); margin-bottom: 6px;">🎧 3. Spotify 30s Audio Preview & Spotify Link</h3>
+          <p class="modal-desc" data-i18n="guideStep3">
+            Clicking a star opens its memory card with a 30-second Spotify audio preview button and a direct button to open the full track on Spotify.
+          </p>
+        </div>
+
+        <div class="guide-section" style="margin-top: 14px;">
+          <h3 style="color: var(--purple-glow); margin-bottom: 6px;">📥 4. Custom Data Upload</h3>
+          <p class="modal-desc" data-i18n="guideStep4">
+            Open Import Playlist, choose an Exportify CSV or Spotify JSON file, then generate your custom starfield.
+          </p>
+        </div>
+
+        <div class="guide-section guide-import-section">
+          <h3 data-i18n="guideSpotifyImportTitle">🎵 5. Import a Spotify Playlist</h3>
+          <div class="guide-import-grid">
+            <article class="guide-format-card guide-format-card--recommended">
+              <div class="guide-card-label">CSV</div>
+              <h4 data-i18n="guideExportifyTitle">Fastest: Exportify CSV</h4>
+              <ol>
+                <li data-i18n="guideExportify1">Open Exportify, sign in to Spotify, and click Export beside the playlist you want.</li>
+                <li data-i18n="guideExportify2">Upload the downloaded .csv file directly. Keep the first-row column names unchanged.</li>
+                <li data-i18n="guideExportify3">Track URI, Track Name, and Artist Name(s) are recognized automatically; optional genre and audio-feature columns improve the visualization.</li>
+              </ol>
+              <a class="guide-link" href="https://exportify.app/" target="_blank" rel="noopener noreferrer">Open Exportify ↗</a>
+            </article>
+
+            <article class="guide-format-card">
+              <div class="guide-card-label guide-card-label--json">JSON</div>
+              <h4 data-i18n="guideJsonTitle">Advanced: Spotify API JSON</h4>
+              <ol>
+                <li data-i18n="guideSpotifyImport1">In Spotify, open a playlist you own or collaborate on, choose Share → Copy link, then copy the playlist ID.</li>
+                <li data-i18n="guideSpotifyImport2">Authorize Spotify's Get Playlist Items API, enter the playlist ID, and run the request.</li>
+                <li data-i18n="guideSpotifyImport3">Paste the complete JSON response into Import Playlist, or upload it as a .json file.</li>
+                <li data-i18n="guideSpotifyImport4">For more than 50 items, fetch additional offsets and combine them into one items array.</li>
+              </ol>
+              <a class="guide-link" href="https://developer.spotify.com/documentation/web-api/reference/get-playlists-items" target="_blank" rel="noopener noreferrer">Spotify API ↗</a>
+            </article>
+          </div>
+          <p class="guide-import-note" data-i18n="guideSpotifyImportNote">
+            CSV and JSON stay in your browser. Local files, podcast episodes, and market-restricted tracks may not have a playable Spotify link.
+          </p>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button id="btn-got-it" class="cyber-btn btn-pink" data-i18n="btnGotIt">Got It / Start Exploring</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Data Modal -->
+  <div id="upload-modal" class="modal-backdrop">
+    <div class="modal-container upload-modal-container">
+      <div class="modal-header">
+        <h2 data-i18n="modalTitle">Generate Your Music Universe</h2>
+        <button id="btn-close-modal" class="close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc" data-i18n="modalDesc">
+          Upload an Exportify CSV or Spotify JSON file, or paste either format below.
+        </p>
+
+        <div class="import-destination">
+          <div class="import-destination-heading">
+            <span data-i18n="importDestinationLabel">IMPORT DESTINATION</span>
+            <span id="current-universe-name" class="current-universe-name">Demo Universe</span>
+          </div>
+          <div class="import-mode-grid">
+            <label class="import-mode-card active">
+              <input type="radio" name="import-mode" value="merge" checked>
+              <span class="import-mode-icon">＋</span>
+              <span class="import-mode-copy">
+                <strong data-i18n="importMergeTitle">Add to current universe</strong>
+                <small data-i18n="importMergeHint">Keep existing stars and add new tracks without duplicates.</small>
+              </span>
+            </label>
+            <label class="import-mode-card">
+              <input type="radio" name="import-mode" value="new">
+              <span class="import-mode-icon">◎</span>
+              <span class="import-mode-copy">
+                <strong data-i18n="importNewTitle">Create a new universe</strong>
+                <small data-i18n="importNewHint">Save this playlist separately; older universes remain available.</small>
+              </span>
+            </label>
+          </div>
+          <div id="new-universe-name-field" class="new-universe-name-field" hidden>
+            <label for="new-universe-name" data-i18n="universeNameLabel">Universe name</label>
+            <input id="new-universe-name" class="cosmic-input" type="text" maxlength="48" data-i18n-placeholder="universeNamePlaceholder" placeholder="e.g. Late Night Orbit">
+          </div>
+        </div>
+
+        <div class="import-format-strip">
+          <span data-i18n="importFormats">SUPPORTED FORMATS</span>
+          <span class="import-format-pill import-format-pill--csv">CSV</span>
+          <span class="import-format-pill import-format-pill--json">JSON</span>
+          <span id="import-detected-format" class="import-detected-format" data-format="auto">AUTO</span>
+        </div>
+
+        <div id="import-dropzone" class="import-dropzone" role="button" tabindex="0">
+          <div class="import-drop-icon">⇩</div>
+          <div class="import-drop-copy">
+            <strong data-i18n="importDropTitle">Drop a playlist file here</strong>
+            <span data-i18n="importDropHint">Exportify .csv or Spotify .json · UTF-8 · one playlist at a time</span>
+            <small id="import-file-status" data-i18n="importNoFile">No file selected</small>
+          </div>
+          <input type="file" id="file-input" accept=".json,.csv,application/json,text/csv" hidden>
+          <button id="btn-choose-file" class="cyber-btn import-file-button" type="button">
+            <span data-i18n="btnChooseFile">Choose CSV / JSON</span>
+          </button>
+        </div>
+
+        <div class="import-paste-row">
+          <label for="json-input" data-i18n="importPasteLabel">Or paste CSV / JSON</label>
+          <div class="import-sample-actions">
+            <button id="btn-load-csv-sample" class="text-action" type="button" data-i18n="btnLoadCsvSample">CSV Sample</button>
+            <button id="btn-load-sample" class="text-action" type="button" data-i18n="btnLoadSample">JSON Sample</button>
+          </div>
+        </div>
+        <textarea id="json-input" class="cyber-textarea" spellcheck="false" placeholder="Paste Exportify CSV or Spotify JSON here…"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-cancel-modal" class="cyber-btn" data-i18n="btnCancel">Cancel</button>
+        <button id="btn-render-universe" class="cyber-btn btn-pink" data-i18n="btnRender">
+          Generate My Music Universe
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Saved Universes Modal -->
+  <div id="universe-modal" class="modal-backdrop">
+    <div class="modal-container universe-modal-container">
+      <div class="modal-header">
+        <div>
+          <h2 data-i18n="archiveTitle">Saved Universes</h2>
+          <p class="modal-desc archive-modal-desc" data-i18n="archiveDesc">Switch between locally saved music universes. Your playlists stay in this browser.</p>
+        </div>
+        <button id="btn-close-universe-modal" class="close-btn">&times;</button>
+      </div>
+      <div id="universe-archive-list" class="universe-archive-list"></div>
+      <div class="modal-actions">
+        <button id="btn-close-universe-list" class="cyber-btn" data-i18n="btnDone">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Community Universes Modal -->
+  <div id="community-modal" class="modal-backdrop">
+    <div class="modal-container community-modal-container">
+      <div class="modal-header">
+        <div>
+          <span class="community-eyebrow" data-i18n="communityEyebrow">LIVE MUSIC NEIGHBORHOOD</span>
+          <h2 data-i18n="communityTitle">Visit Community Universes</h2>
+          <p class="modal-desc community-modal-desc" data-i18n="communityDesc">Explore another listener's universe and chat with its resident music fan.</p>
+        </div>
+        <button id="btn-close-community" class="close-btn" type="button">&times;</button>
+      </div>
+      <div id="community-profile-list" class="community-profile-list"></div>
+      <div class="community-api-note">
+        <span class="community-api-dot"></span>
+        <span data-i18n="communityApiNote">Chat supports a configurable API and automatically falls back to an on-device persona.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Community Chat Drawer -->
+  <aside id="community-chat-panel" class="community-chat-panel" aria-hidden="true">
+    <div class="community-chat-header">
+      <div id="community-chat-avatar" class="community-chat-avatar">⚡</div>
+      <div class="community-chat-identity">
+        <span id="community-chat-genre">ROCK SIGNAL</span>
+        <h2 id="community-chat-name">Rex</h2>
+      </div>
+      <span id="community-chat-status" class="community-chat-status">LOCAL</span>
+      <button id="btn-close-community-chat" class="close-btn" type="button">&times;</button>
+    </div>
+    <div id="community-chat-messages" class="community-chat-messages" aria-live="polite"></div>
+    <div id="community-chat-prompts" class="community-chat-prompts"></div>
+    <form id="community-chat-form" class="community-chat-form">
+      <input id="community-chat-input" type="text" maxlength="500" autocomplete="off" data-i18n-placeholder="communityChatPlaceholder" placeholder="Talk about music…">
+      <button type="submit" aria-label="Send">↑</button>
+    </form>
+  </aside>
+
+  <!-- Read-only Community Visit Banner -->
+  <div id="community-visit-banner" class="community-visit-banner">
+    <span class="community-visit-pulse"></span>
+    <span data-i18n="communityVisiting">Visiting</span>
+    <strong id="community-visit-name"></strong>
+    <button id="btn-return-home" type="button" data-i18n="communityReturn">Return home</button>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast-container">
+    <span id="toast-message">Universe Initialized</span>
+  </div>
+
+  <!-- Application Scripts -->
+  <script>
+    window.MUSIC_UNIVERSE_CHAT_API = {
+      endpoint: '/api/chat',
+      model: 'openai/gpt-oss-120b'
+    };
+  </script>
+  <script src="data-loader.js?v=9"></script>
+  <script src="app.js?v=9"></script>
+  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+</body>
+</html>
